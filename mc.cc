@@ -1,5 +1,7 @@
 #include "mc.h"
 
+#include <cmath>
+
 /*
 * Implementation based on http://paulbourke.net/geometry/polygonise/
 * Geometric data structures from https://github.com/salvipeter/transfinite
