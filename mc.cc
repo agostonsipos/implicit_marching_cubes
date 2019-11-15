@@ -14,12 +14,13 @@ namespace IMC {
 	{
 		double mu;
 		Geometry::Vector3D p;
+		double eps = 1e-5;
 
-		if (abs(isolevel - valp1) < 0.00001)
+		if (std::abs(isolevel - valp1) < eps)
 			return p1;
-		if (abs(isolevel - valp2) < 0.00001)
+		if (std::abs(isolevel - valp2) < eps)
 			return p2;
-		if (abs(valp1 - valp2) < 0.00001)
+		if (std::abs(valp1 - valp2) < eps)
 			return (p1 + p2) / 2;
 		mu = (isolevel - valp1) / (valp2 - valp1);
 		p[0] = p1[0] + mu * (p2[0] - p1[0]);
@@ -98,7 +99,7 @@ namespace IMC {
 						VertexInterp(isolevel, corners[3], corners[7], scalarFunc(corners[3]), scalarFunc(corners[7]));
 
 
-					double tol = sqrt(cellX * cellX + cellY * cellY + cellZ * cellZ) / 1000.0;
+					double tol = std::sqrt(cellX * cellX + cellY * cellY + cellZ * cellZ) / 1000.0;
 					for (int e = 0; Tables::triTable[cubeindex][e] != -1; e += 3) {
 						Geometry::Vector3D a = vertlist[Tables::triTable[cubeindex][e]];
 						Geometry::Vector3D b = vertlist[Tables::triTable[cubeindex][e + 1]];
@@ -131,11 +132,7 @@ namespace IMC {
 							points.push_back(c);
 							indC = index++;
 						}
-						/*points.push_back(a);
-						points.push_back(b);
-						points.push_back(c);*/
 						mesh.addTriangle(indA, indB, indC);
-						//index += 3;
 					}
 				}
 		mesh.setPoints(points);
