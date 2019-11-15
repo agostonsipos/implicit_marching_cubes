@@ -13,6 +13,7 @@ link_directories("${Transfinite_DIR}/geom/Release")
 add_library(marching_cubes STATIC
 	mc.h
     mc.cc
+	tables.cc
 )
 
 target_link_libraries(marching_cubes "geom")
