@@ -98,12 +98,44 @@ namespace IMC {
 						VertexInterp(isolevel, corners[3], corners[7], scalarFunc(corners[3]), scalarFunc(corners[7]));
 
 
+					double tol = sqrt(cellX * cellX + cellY * cellY + cellZ * cellZ) / 1000.0;
 					for (int e = 0; Tables::triTable[cubeindex][e] != -1; e += 3) {
-						points.push_back(vertlist[Tables::triTable[cubeindex][e]]);
-						points.push_back(vertlist[Tables::triTable[cubeindex][e + 1]]);
-						points.push_back(vertlist[Tables::triTable[cubeindex][e + 2]]);
-						mesh.addTriangle(index, index + 1, index + 2);
-						index += 3;
+						Geometry::Vector3D a = vertlist[Tables::triTable[cubeindex][e]];
+						Geometry::Vector3D b = vertlist[Tables::triTable[cubeindex][e + 1]];
+						Geometry::Vector3D c = vertlist[Tables::triTable[cubeindex][e + 2]];
+						int indA = -1, indB = -1, indC = -1;
+						for (auto it = points.begin(); it != points.end(); ++it)
+							if ((*it - a).norm() < tol) {
+								indA = it - points.begin();
+								break;
+							}
+						if (indA == -1) {
+							points.push_back(a);
+							indA = index++;
+						}
+						for (auto it = points.begin(); it != points.end(); ++it)
+							if ((*it - b).norm() < tol) {
+								indB = it - points.begin();
+								break;
+							}
+						if (indB == -1) {
+							points.push_back(b);
+							indB = index++;
+						}
+						for (auto it = points.begin(); it != points.end(); ++it)
+							if ((*it - c).norm() < tol) {
+								indC = it - points.begin();
+								break;
+							}
+						if (indC == -1) {
+							points.push_back(c);
+							indC = index++;
+						}
+						/*points.push_back(a);
+						points.push_back(b);
+						points.push_back(c);*/
+						mesh.addTriangle(indA, indB, indC);
+						//index += 3;
 					}
 				}
 		mesh.setPoints(points);
