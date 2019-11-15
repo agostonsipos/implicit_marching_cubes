@@ -8,6 +8,7 @@
 */
 namespace IMC {
 	namespace Tables {
+		extern int edgePoints[12][2];
 		extern int edgeTable[256];
 		extern int triTable[256][16];
 	}
@@ -63,78 +64,34 @@ namespace IMC {
 
 					std::array<Geometry::Vector3D, 12> vertlist;
 
-					if (Tables::edgeTable[cubeindex] & 1)
-						vertlist[0] =
-						VertexInterp(isolevel, corners[0], corners[1], scalarFunc(corners[0]), scalarFunc(corners[1]));
-					if (Tables::edgeTable[cubeindex] & 2)
-						vertlist[1] =
-						VertexInterp(isolevel, corners[1], corners[2], scalarFunc(corners[1]), scalarFunc(corners[2]));
-					if (Tables::edgeTable[cubeindex] & 4)
-						vertlist[2] =
-						VertexInterp(isolevel, corners[2], corners[3], scalarFunc(corners[2]), scalarFunc(corners[3]));
-					if (Tables::edgeTable[cubeindex] & 8)
-						vertlist[3] =
-						VertexInterp(isolevel, corners[3], corners[0], scalarFunc(corners[3]), scalarFunc(corners[0]));
-					if (Tables::edgeTable[cubeindex] & 16)
-						vertlist[4] =
-						VertexInterp(isolevel, corners[4], corners[5], scalarFunc(corners[4]), scalarFunc(corners[5]));
-					if (Tables::edgeTable[cubeindex] & 32)
-						vertlist[5] =
-						VertexInterp(isolevel, corners[5], corners[6], scalarFunc(corners[5]), scalarFunc(corners[6]));
-					if (Tables::edgeTable[cubeindex] & 64)
-						vertlist[6] =
-						VertexInterp(isolevel, corners[6], corners[7], scalarFunc(corners[6]), scalarFunc(corners[7]));
-					if (Tables::edgeTable[cubeindex] & 128)
-						vertlist[7] =
-						VertexInterp(isolevel, corners[7], corners[4], scalarFunc(corners[7]), scalarFunc(corners[4]));
-					if (Tables::edgeTable[cubeindex] & 256)
-						vertlist[8] =
-						VertexInterp(isolevel, corners[0], corners[4], scalarFunc(corners[0]), scalarFunc(corners[4]));
-					if (Tables::edgeTable[cubeindex] & 512)
-						vertlist[9] =
-						VertexInterp(isolevel, corners[1], corners[5], scalarFunc(corners[1]), scalarFunc(corners[5]));
-					if (Tables::edgeTable[cubeindex] & 1024)
-						vertlist[10] =
-						VertexInterp(isolevel, corners[2], corners[6], scalarFunc(corners[2]), scalarFunc(corners[6]));
-					if (Tables::edgeTable[cubeindex] & 2048)
-						vertlist[11] =
-						VertexInterp(isolevel, corners[3], corners[7], scalarFunc(corners[3]), scalarFunc(corners[7]));
 
+					for (int i = 0; i < 12; ++i) {
+						if(Tables::edgeTable[cubeindex] & 1 << i)
+							vertlist[i] = VertexInterp(isolevel, 
+								corners[Tables::edgePoints[i][0]], corners[Tables::edgePoints[i][1]], 
+								scalarFunc(corners[Tables::edgePoints[i][0]]), scalarFunc(corners[Tables::edgePoints[i][1]]));
+					}
 
 					double tol = std::sqrt(cellX * cellX + cellY * cellY + cellZ * cellZ) / 1000.0;
 					for (int e = 0; Tables::triTable[cubeindex][e] != -1; e += 3) {
-						Geometry::Vector3D a = vertlist[Tables::triTable[cubeindex][e]];
-						Geometry::Vector3D b = vertlist[Tables::triTable[cubeindex][e + 1]];
-						Geometry::Vector3D c = vertlist[Tables::triTable[cubeindex][e + 2]];
-						int indA = -1, indB = -1, indC = -1;
-						for (auto it = points.begin(); it != points.end(); ++it)
-							if ((*it - a).norm() < tol) {
-								indA = it - points.begin();
-								break;
+						std::array<Geometry::Vector3D, 3> vertices = {
+							vertlist[Tables::triTable[cubeindex][e]],
+							vertlist[Tables::triTable[cubeindex][e + 1]],
+							vertlist[Tables::triTable[cubeindex][e + 2]]
+						};
+						int indices[3] = { -1, -1, -1 };
+						for (int k = 0; k < 3; ++k) {
+							for (auto it = points.begin(); it != points.end(); ++it)
+								if ((*it - vertices[k]).norm() < tol) {
+									indices[k] = it - points.begin();
+									break;
+								}
+							if (indices[k] == -1) {
+								points.push_back(vertices[k]);
+								indices[k] = index++;
 							}
-						if (indA == -1) {
-							points.push_back(a);
-							indA = index++;
 						}
-						for (auto it = points.begin(); it != points.end(); ++it)
-							if ((*it - b).norm() < tol) {
-								indB = it - points.begin();
-								break;
-							}
-						if (indB == -1) {
-							points.push_back(b);
-							indB = index++;
-						}
-						for (auto it = points.begin(); it != points.end(); ++it)
-							if ((*it - c).norm() < tol) {
-								indC = it - points.begin();
-								break;
-							}
-						if (indC == -1) {
-							points.push_back(c);
-							indC = index++;
-						}
-						mesh.addTriangle(indA, indB, indC);
+						mesh.addTriangle(indices[0], indices[1], indices[2]);
 					}
 				}
 		mesh.setPoints(points);
