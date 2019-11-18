@@ -1,6 +1,8 @@
 #include "mc.h"
 
 #include <cmath>
+#include <map>
+#include <vector>
 
 /*
 * Implementation based on http://paulbourke.net/geometry/polygonise/
@@ -36,13 +38,14 @@ namespace IMC {
 	{
 		Geometry::TriMesh mesh;
 		Geometry::PointVector points;
+		std::map<std::tuple<int,int,int>, std::vector<int>> cells;
 		int index = 0;
 		double cellX = (box[1][0] - box[0][0]) / res[0];
 		double cellY = (box[1][1] - box[0][1]) / res[1];
 		double cellZ = (box[1][2] - box[0][2]) / res[2];
-		for (int64_t i = 0; i < res[0]; ++i)
-			for (int64_t j = 0; j < res[1]; ++j)
-				for (int64_t k = 0; k < res[2]; ++k)
+		for (int i = 0; i < res[0]; ++i)
+			for (int j = 0; j < res[1]; ++j)
+				for (int k = 0; k < res[2]; ++k)
 				{
 					std::array<Geometry::Vector3D, 8> corners;
 					int cubeindex = 0;
@@ -58,10 +61,11 @@ namespace IMC {
 
 
 					for (int e = 0; e < 12; ++e) {
-						if(Tables::edgeTable[cubeindex] & (1 << e))
-							vertlist[e] = VertexInterp(isolevel, 
-								corners[Tables::edgePoints[e][0]], corners[Tables::edgePoints[e][1]], 
+						if (Tables::edgeTable[cubeindex] & (1 << e)) {
+							vertlist[e] = VertexInterp(isolevel,
+								corners[Tables::edgePoints[e][0]], corners[Tables::edgePoints[e][1]],
 								scalarFunc(corners[Tables::edgePoints[e][0]]), scalarFunc(corners[Tables::edgePoints[e][1]]));
+						}
 					}
 
 					double tol = std::sqrt(cellX * cellX + cellY * cellY + cellZ * cellZ) / 1000.0;
@@ -71,16 +75,25 @@ namespace IMC {
 							vertlist[Tables::triTable[cubeindex][e + 1]],
 							vertlist[Tables::triTable[cubeindex][e + 2]]
 						};
-						int indices[3] = { -1, -1, -1 };
-						for (int k = 0; k < 3; ++k) {
-							for (auto it = points.begin(); it != points.end(); ++it)
-								if ((*it - vertices[k]).norm() < tol) {
-									indices[k] = it - points.begin();
-									break;
+						int indices[3];
+						for (int t = 0; t < 3; ++t) {
+							bool foundPoint = false;
+							for (int x = 0; x < 8 && !foundPoint; ++x) {
+								auto& list = cells[{i - ((x >> 2) & 1), j - ((x >> 1) & 1), k - (x & 1)}];
+								for (auto it = list.begin(); it != list.end(); ++it)
+								{
+									if ((points[*it] - vertices[t]).norm() < tol) {
+										indices[t] = *it;
+										cells[{i,j,k}].push_back(indices[t]);
+										foundPoint = true;
+										break;
+									}
 								}
-							if (indices[k] == -1) {
-								points.push_back(vertices[k]);
-								indices[k] = index++;
+							}
+							if (!foundPoint) {
+								points.push_back(vertices[t]);
+								indices[t] = index++;
+								cells[{i,j,k}].push_back(indices[t]);
 							}
 						}
 						mesh.addTriangle(indices[0], indices[1], indices[2]);
