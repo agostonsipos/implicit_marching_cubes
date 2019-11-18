@@ -8,9 +8,10 @@
 */
 namespace IMC {
 	namespace Tables {
-		extern int edgePoints[12][2];
-		extern int edgeTable[256];
-		extern int triTable[256][16];
+		extern std::array<std::array<int, 3>, 8> cornerPositions;
+		extern std::array<std::array<int, 2>, 12> edgePoints;
+		extern std::array<int, 256> edgeTable;
+		extern std::array<std::array<int, 16>, 256> triTable;
 	}
 
 	Geometry::Vector3D VertexInterp(double isolevel, Geometry::Vector3D p1, Geometry::Vector3D p2, double valp1, double valp2)
@@ -23,8 +24,6 @@ namespace IMC {
 			return p1;
 		if (std::abs(isolevel - valp2) < eps)
 			return p2;
-		if (std::abs(valp1 - valp2) < eps)
-			return (p1 + p2) / 2;
 		mu = (isolevel - valp1) / (valp2 - valp1);
 		p[0] = p1[0] + mu * (p2[0] - p1[0]);
 		p[1] = p1[1] + mu * (p2[1] - p1[1]);
@@ -41,35 +40,28 @@ namespace IMC {
 		double cellX = (box[1][0] - box[0][0]) / res[0];
 		double cellY = (box[1][1] - box[0][1]) / res[1];
 		double cellZ = (box[1][2] - box[0][2]) / res[2];
-		for (int i = 0; i < res[0]; ++i)
-			for (int j = 0; j < res[1]; ++j)
-				for (int k = 0; k < res[2]; ++k)
+		for (int64_t i = 0; i < res[0]; ++i)
+			for (int64_t j = 0; j < res[1]; ++j)
+				for (int64_t k = 0; k < res[2]; ++k)
 				{
 					std::array<Geometry::Vector3D, 8> corners;
-					corners[0] = Geometry::Vector3D(
-						box[0][0] + cellX * i,
-						box[0][1] + cellY * j,
-						box[0][2] + cellZ * k
-					);
-					corners[1] = corners[0] + Geometry::Vector3D(cellX, 0, 0);
-					corners[2] = corners[0] + Geometry::Vector3D(cellX, cellY, 0);
-					corners[3] = corners[0] + Geometry::Vector3D(0, cellY, 0);
-					corners[4] = corners[0] + Geometry::Vector3D(0, 0, cellZ);
-					corners[5] = corners[0] + Geometry::Vector3D(cellX, 0, cellZ);
-					corners[6] = corners[0] + Geometry::Vector3D(cellX, cellY, cellZ);
-					corners[7] = corners[0] + Geometry::Vector3D(0, cellY, cellZ);
 					int cubeindex = 0;
-					for (int c = 0; c < 8; ++c)
+					for (int c = 0; c < 8; ++c) {
+						corners[c] = Geometry::Vector3D(
+							box[0][0] + cellX * (i + Tables::cornerPositions[c][0]),
+							box[0][1] + cellY * (j + Tables::cornerPositions[c][1]),
+							box[0][2] + cellZ * (k + Tables::cornerPositions[c][2])
+						);
 						if (scalarFunc(corners[c]) < isolevel) cubeindex |= (1 << c);
-
+					}
 					std::array<Geometry::Vector3D, 12> vertlist;
 
 
-					for (int i = 0; i < 12; ++i) {
-						if(Tables::edgeTable[cubeindex] & 1 << i)
-							vertlist[i] = VertexInterp(isolevel, 
-								corners[Tables::edgePoints[i][0]], corners[Tables::edgePoints[i][1]], 
-								scalarFunc(corners[Tables::edgePoints[i][0]]), scalarFunc(corners[Tables::edgePoints[i][1]]));
+					for (int e = 0; e < 12; ++e) {
+						if(Tables::edgeTable[cubeindex] & (1 << e))
+							vertlist[e] = VertexInterp(isolevel, 
+								corners[Tables::edgePoints[e][0]], corners[Tables::edgePoints[e][1]], 
+								scalarFunc(corners[Tables::edgePoints[e][0]]), scalarFunc(corners[Tables::edgePoints[e][1]]));
 					}
 
 					double tol = std::sqrt(cellX * cellX + cellY * cellY + cellZ * cellZ) / 1000.0;
