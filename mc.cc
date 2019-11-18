@@ -43,28 +43,46 @@ namespace IMC {
 		double cellX = (box[1][0] - box[0][0]) / res[0];
 		double cellY = (box[1][1] - box[0][1]) / res[1];
 		double cellZ = (box[1][2] - box[0][2]) / res[2];
+
+		std::vector<std::vector<std::vector<Geometry::Vector3D>>> cellCorners(res[0]+1);
+		std::vector<std::vector<std::vector<double>>> cellValues(res[0]+1);
+		for (int i = 0; i <= res[0]; ++i) {
+			cellCorners[i].resize(res[1] + 1);
+			cellValues[i].resize(res[1] + 1);
+			for (int j = 0; j <= res[1]; ++j) {
+				cellCorners[i][j].resize(res[2] + 1);
+				cellValues[i][j].resize(res[2] + 1);
+				for (int k = 0; k <= res[2]; ++k) {
+					cellCorners[i][j][k] = Geometry::Vector3D(
+						box[0][0] + cellX * i,
+						box[0][1] + cellY * j,
+						box[0][2] + cellZ * k
+					);
+					cellValues[i][j][k] = scalarFunc(cellCorners[i][j][k]);
+				}
+			}
+		}
+
 		for (int i = 0; i < res[0]; ++i)
 			for (int j = 0; j < res[1]; ++j)
 				for (int k = 0; k < res[2]; ++k)
 				{
 					std::array<Geometry::Vector3D, 8> corners;
+					std::array<double, 8> values;
 					int cubeindex = 0;
 					for (int c = 0; c < 8; ++c) {
-						corners[c] = Geometry::Vector3D(
-							box[0][0] + cellX * (i + Tables::cornerPositions[c][0]),
-							box[0][1] + cellY * (j + Tables::cornerPositions[c][1]),
-							box[0][2] + cellZ * (k + Tables::cornerPositions[c][2])
-						);
-						if (scalarFunc(corners[c]) < isolevel) cubeindex |= (1 << c);
+						int x = i + Tables::cornerPositions[c][0], y = j + Tables::cornerPositions[c][1], z = k + Tables::cornerPositions[c][2];
+						corners[c] = cellCorners[x][y][z];
+						values[c] = cellValues[x][y][z];
+						if (values[c] < isolevel) cubeindex |= (1 << c);
 					}
 					std::array<Geometry::Vector3D, 12> vertlist;
-
 
 					for (int e = 0; e < 12; ++e) {
 						if (Tables::edgeTable[cubeindex] & (1 << e)) {
 							vertlist[e] = VertexInterp(isolevel,
 								corners[Tables::edgePoints[e][0]], corners[Tables::edgePoints[e][1]],
-								scalarFunc(corners[Tables::edgePoints[e][0]]), scalarFunc(corners[Tables::edgePoints[e][1]]));
+								values[Tables::edgePoints[e][0]], values[Tables::edgePoints[e][1]]);
 						}
 					}
 
@@ -79,7 +97,7 @@ namespace IMC {
 						for (int t = 0; t < 3; ++t) {
 							bool foundPoint = false;
 							for (int x = 0; x < 8 && !foundPoint; ++x) {
-								auto& list = cells[{i - ((x >> 2) & 1), j - ((x >> 1) & 1), k - (x & 1)}];
+								std::vector<int>& list = cells[{i - ((x >> 2) & 1), j - ((x >> 1) & 1), k - (x & 1)}];
 								for (auto it = list.begin(); it != list.end(); ++it)
 								{
 									if ((points[*it] - vertices[t]).norm() < tol) {
