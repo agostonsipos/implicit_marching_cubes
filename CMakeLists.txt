@@ -6,9 +6,18 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
+if(UNIX)
+        add_compile_options(-fPIC)
+endif()
+
 set(Transfinite_DIR "../transfinite/src") # https://github.com/salvipeter/transfinite
 include_directories("${Transfinite_DIR}/geom")
-link_directories("${Transfinite_DIR}/geom/Release")
+
+if(WIN32)
+        link_directories("${Transfinite_DIR}/geom/Release")
+else()
+        link_directories("${Transfinite_DIR}/../release/geom")
+endif()
 
 add_library(marching_cubes STATIC
 	mc.h
