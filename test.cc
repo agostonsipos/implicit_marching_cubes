@@ -1,5 +1,6 @@
 #include "mc.h"
 
+#include <cmath>
 #include <chrono>
 
 using namespace Geometry;
