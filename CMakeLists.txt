@@ -6,9 +6,11 @@ if(CMAKE_VERSION VERSION_LESS "3.7.0")
     set(CMAKE_INCLUDE_CURRENT_DIR ON)
 endif()
 
-if(UNIX)
-        add_compile_options(-fPIC)
-endif()
+if(CMAKE_COMPILER_IS_GNUCXX)
+  set(CMAKE_CXX_FLAGS "-Wall -pedantic -std=c++17 -fPIC")
+  set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG")
+  set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
+endif(CMAKE_COMPILER_IS_GNUCXX)
 
 set(Transfinite_DIR "../transfinite/src") # https://github.com/salvipeter/transfinite
 include_directories("${Transfinite_DIR}/geom")
