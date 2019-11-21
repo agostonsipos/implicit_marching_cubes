@@ -34,13 +34,14 @@ namespace IMC {
 	Geometry::Vector3D FunctionInterp(double isolevel, std::function<double(Geometry::Vector3D)> scalarFunc, Geometry::Vector3D p1, Geometry::Vector3D p2)
 	{
 		double eps = 1e-5;
-		if (std::abs(isolevel - scalarFunc(p1)) < eps)
+		double valp1 = scalarFunc(p1);
+		if (std::abs(isolevel - valp1) < eps)
 			return p1;
 		if (std::abs(isolevel - scalarFunc(p2)) < eps)
 			return p2;
 		auto p = (p1 + p2) / 2;
 		int i = 0;
-		double valp = scalarFunc(p), valp1 = scalarFunc(p1);
+		double valp = scalarFunc(p);
 		while (std::abs(valp) > eps && i < 10) {
 			if (valp * valp1 < 0.0) {
 				p2 = p;
@@ -124,8 +125,8 @@ namespace IMC {
 						for (int t = 0; t < 3; ++t) {
 							bool foundPoint = false;
 							for (int x = 0; x < 8 && !foundPoint; ++x) {
-								int cellInd = ind3d1(i - ((x >> 2) & 1), j - ((x >> 1) & 1), k - (x & 1));
 								if (i - ((x >> 2) & 1) < 0 || j - ((x >> 1) & 1) < 0 || k - (x & 1) < 0) continue;
+								int cellInd = ind3d1(i - ((x >> 2) & 1), j - ((x >> 1) & 1), k - (x & 1));
 								std::vector<int>& list = cells[cellInd];
 								for (auto it = list.begin(); it != list.end(); ++it)
 								{
