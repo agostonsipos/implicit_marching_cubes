@@ -26,14 +26,37 @@ namespace IMC {
 		if (std::abs(isolevel - valp2) < eps)
 			return p2;
 		mu = (isolevel - valp1) / (valp2 - valp1);
-		p[0] = p1[0] + mu * (p2[0] - p1[0]);
-		p[1] = p1[1] + mu * (p2[1] - p1[1]);
-		p[2] = p1[2] + mu * (p2[2] - p1[2]);
+		p = p1 + (p2 - p1) * mu;
 
 		return p;
 	}
 
-	Geometry::TriMesh marching_cubes(std::function<double(Geometry::Vector3D)> scalarFunc, double isolevel, std::array<Geometry::Vector3D, 2> box, std::array<int, 3> res)
+	Geometry::Vector3D FunctionInterp(double isolevel, std::function<double(Geometry::Vector3D)> scalarFunc, Geometry::Vector3D p1, Geometry::Vector3D p2)
+	{
+		double eps = 1e-5;
+		if (std::abs(isolevel - scalarFunc(p1)) < eps)
+			return p1;
+		if (std::abs(isolevel - scalarFunc(p2)) < eps)
+			return p2;
+		auto p = (p1 + p2) / 2;
+		int i = 0;
+		double valp = scalarFunc(p), valp1 = scalarFunc(p1);
+		while (std::abs(valp) > eps && i < 10) {
+			if (valp * valp1 < 0.0) {
+				p2 = p;
+			}
+			else {
+				p1 = p;
+				valp1 = valp;
+			}
+			p = (p1 + p2) / 2;
+			valp = scalarFunc(p);
+			++i;
+		}
+		return p;
+	}
+
+	Geometry::TriMesh marching_cubes(std::function<double(Geometry::Vector3D)> scalarFunc, double isolevel, std::array<Geometry::Vector3D, 2> box, std::array<int, 3> res, bool findRoot)
 	{
 		Geometry::TriMesh mesh;
 		Geometry::PointVector points;
@@ -68,7 +91,7 @@ namespace IMC {
 				{
 					std::array<Geometry::Vector3D, 8> corners;
 					std::array<double, 8> values;
-					int cubeindex = 0;
+					unsigned char cubeindex = 0;
 					for (int c = 0; c < 8; ++c) {
 						int x = i + Tables::cornerPositions[c][0], y = j + Tables::cornerPositions[c][1], z = k + Tables::cornerPositions[c][2];
 						corners[c] = cellCorners[ind3d2(x, y, z)];
@@ -79,9 +102,15 @@ namespace IMC {
 
 					for (int e = 0; e < 12; ++e) {
 						if (Tables::edgeTable[cubeindex] & (1 << e)) {
-							vertlist[e] = VertexInterp(isolevel,
-								corners[Tables::edgePoints[e][0]], corners[Tables::edgePoints[e][1]],
-								values[Tables::edgePoints[e][0]], values[Tables::edgePoints[e][1]]);
+							if (findRoot) {
+								vertlist[e] = FunctionInterp(isolevel, scalarFunc,
+									corners[Tables::edgePoints[e][0]], corners[Tables::edgePoints[e][1]]);
+							}
+							else {
+								vertlist[e] = VertexInterp(isolevel,
+									corners[Tables::edgePoints[e][0]], corners[Tables::edgePoints[e][1]],
+									values[Tables::edgePoints[e][0]], values[Tables::edgePoints[e][1]]);
+							}
 						}
 					}
 

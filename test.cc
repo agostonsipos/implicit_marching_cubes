@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
 		auto start = std::chrono::high_resolution_clock::now();
 
-		TriMesh mesh = IMC::marching_cubes(sphere, 0, boundingBox1, { 200,200,200 });
+		TriMesh mesh = IMC::marching_cubes(sphere, 0, boundingBox1, { 200,200,200 }, true);
 
 		auto end = std::chrono::high_resolution_clock::now();
 		std::cerr << "Sphere (200x200) created in: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 
 		auto start = std::chrono::high_resolution_clock::now();
 
-		TriMesh mesh = IMC::marching_cubes(something, 0, boundingBox2, { 200,200,200 });
+		TriMesh mesh = IMC::marching_cubes(something, 0, boundingBox2, { 200,200,200 }, true);
 
 		auto end = std::chrono::high_resolution_clock::now();
 		std::cerr << "Gyroid (200x200) created in: " << std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count() << " ms" << std::endl;
