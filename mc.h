@@ -10,7 +10,8 @@ namespace IMC { // implicit marching cubes
 		std::function<double(Geometry::Vector3D)> scalarFunc,
 		double isolevel,
 		std::array<Geometry::Vector3D, 2> boundingBox,
-		std::array<int, 3> resolution
+		std::array<int, 3> resolution,
+		bool findRoot = false // find function root numerically instead of linear interpolation
 	);
 
 }
