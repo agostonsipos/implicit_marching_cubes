@@ -12,13 +12,13 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
-set(Transfinite_DIR "../transfinite/src") # https://github.com/salvipeter/transfinite
-include_directories("${Transfinite_DIR}/geom")
+set(GEOM_DIR "../libgeom") # https://github.com/salvipeter/libgeom
+include_directories("${GEOM_DIR}")
 
 if(WIN32)
-        link_directories("${Transfinite_DIR}/geom/Release")
+        link_directories("${GEOM_DIR}/Release")
 else()
-        link_directories("${Transfinite_DIR}/../release/geom")
+        link_directories("${GEOM_DIR}/build")
 endif()
 
 add_library(marching_cubes STATIC
