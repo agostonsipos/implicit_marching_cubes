@@ -12,14 +12,11 @@ if(CMAKE_COMPILER_IS_GNUCXX)
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -DNDEBUG")
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
-set(GEOM_DIR "../libgeom") # https://github.com/salvipeter/libgeom
+set(GEOM_DIR "libgeom") # https://github.com/salvipeter/libgeom
 include_directories("${GEOM_DIR}")
 
-if(WIN32)
-        link_directories("${GEOM_DIR}/Release")
-else()
-        link_directories("${GEOM_DIR}/build")
-endif()
+link_directories("${GEOM_DIR}/build")
+
 
 add_library(marching_cubes STATIC
 	mc.h
@@ -34,18 +31,3 @@ add_executable(marching_cubes_test
 )
 
 target_link_libraries(marching_cubes_test marching_cubes)
-
-
-if(WIN32)
-	set(CompilerFlags
-			CMAKE_CXX_FLAGS
-			CMAKE_CXX_FLAGS_DEBUG
-			CMAKE_CXX_FLAGS_RELEASE
-			CMAKE_C_FLAGS
-			CMAKE_C_FLAGS_DEBUG
-			CMAKE_C_FLAGS_RELEASE
-			)
-	foreach(CompilerFlag ${CompilerFlags})
-	  string(REPLACE "/MD" "/MT" ${CompilerFlag} "${${CompilerFlag}}")
-	endforeach()
-endif()

@@ -1,0 +1,3 @@
+[submodule "libgeom"]
+	path = libgeom
+	url = https://github.com/salvipeter/libgeom.git
