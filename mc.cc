@@ -5,7 +5,7 @@
 
 /*
 * Implementation based on http://paulbourke.net/geometry/polygonise/
-* Geometric data structures from https://github.com/salvipeter/transfinite
+* Geometric data structures from https://github.com/salvipeter/libgeom
 */
 namespace IMC {
 	namespace Tables {

@@ -19,15 +19,15 @@ link_directories("${GEOM_DIR}/build")
 
 
 add_library(marching_cubes STATIC
-	mc.h
+    mc.h
     mc.cc
-	tables.cc
+    tables.cc
 )
 
 target_link_libraries(marching_cubes "geom")
 
 add_executable(marching_cubes_test
-	test.cc
+    test.cc
 )
 
 target_link_libraries(marching_cubes_test marching_cubes)
